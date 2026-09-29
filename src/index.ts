@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { fetchPokemon, PokemonNotFoundError } from "./api/pokeapi.js";
+import { getCachedPokemon, saveCachedPokemon } from "./cache/pokecache.js";
 
 const program = new Command();
 
@@ -15,9 +16,14 @@ program
   .argument("<name>", "ポケモンの名前（英語表記, 例：pikachu）")
   .action(async (name: string) => {
     try {
-      const pokemon = await fetchPokemon(name);
+      const cached = await getCachedPokemon(name);
+      const pokemon = cached ?? (await fetchPokemon(name));
+
+      if (!cached) {
+        await saveCachedPokemon(name, pokemon);
+      }
   
-      console.log(`No.${pokemon.id} ${pokemon.name}`);
+      console.log(`No.${pokemon.id} ${pokemon.name}${cached ? " (cached) " : ""}`);
       console.log(`Height: ${pokemon.height / 10} m`);
       console.log(`Wieght: ${pokemon.weight / 10} kg`);
       console.log(`Types: ${pokemon.types.map((t) => t.type.name).join(", ")}`);
