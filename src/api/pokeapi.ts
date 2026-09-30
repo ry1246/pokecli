@@ -5,7 +5,7 @@ const POKEAPI_BASE = "https://pokeapi.co/api/v2";
 export class PokemonNotFoundError extends Error {
   constructor(name: string) {
     super(`ポケモンが見つかりませんでした: ${name}`);
-    this.name = "POkemonNotFoundError";
+    this.name = "PokemonNotFoundError";
   }
 }
 
