@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { fetchPokemon, PokemonNotFoundError } from "./api/pokeapi.js";
-import { getCachedPokemon, saveCachedPokemon } from "./cache/pokecache.js";
+import { getCachedPokemon, saveCachedPokemon, clearCache } from "./cache/pokecache.js";
 import Table from "cli-table3";
 
 const program = new Command();
@@ -20,12 +20,13 @@ program
   .command("search")
   .description("ポケモン名で検索して情報を表示")
   .argument("<name>", "ポケモンの名前（英語表記, 例：pikachu）")
-  .action(async (name: string) => {
+  .option("--no-cache", "キャッシュを使わず強制的にAPIから取得する")
+  .action(async (name: string, options: { cache: boolean }) => {
     try {
-      const cached = await getCachedPokemon(name);
+      const cached = options.cache ? await getCachedPokemon(name) : undefined;
       const pokemon = cached ?? (await fetchPokemon(name));
 
-      if (!cached) {
+      if (options.cache && !cached) {
         await saveCachedPokemon(name, pokemon);
       }
   
@@ -49,5 +50,22 @@ program
       }
     }
   });
+
+const cacheCommand = program
+  .command("cache")
+  .description("キャッシュ関連の操作");
+
+cacheCommand
+  .command("clear")
+  .description("キャッシュファイルを削除する")
+  .action(async () => {
+    try {
+      await clearCache();
+      console.log("キャッシュを削除しました");
+    } catch (err) {
+      console.error(`RuntimeError: ${(err as Error).message}`);
+      process.exitCode = 2;
+    }
+  })
 
 program.parse();

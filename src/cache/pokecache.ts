@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { PokeApiPokemon } from "../types/pokemon.js";
@@ -31,4 +31,8 @@ export async function saveCachedPokemon(name: string, data: PokeApiPokemon): Pro
   const cache = await readCache();
   cache[name.toLowerCase()] = data;
   await writeCache(cache);
+}
+
+export async function clearCache(): Promise<void> {
+  await rm(CACHE_FILE, { force: true });
 }
